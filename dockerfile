@@ -1,4 +1,4 @@
-# ---- Stage 1: Build the application ----
+# ---- Stage 1: Build the application ---
 FROM maven:3.9.4-eclipse-temurin-17 AS builder
 
 # Set working directory
