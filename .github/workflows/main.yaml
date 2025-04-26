@@ -1,33 +1,33 @@
-name: build the docker image and push it to AWS ECR 
+name: Build the Docker Image and Push it to AWS ECR
 on:
-    push:
-        branches: [main]
+  push:
+    branches: [main]
+
 jobs:
-    build-push:
-        name: build and push to ECR
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout
-          uses: actions/checkout@v2
+  build-push:
+    name: Build and Push to ECR
+    runs-on: ubuntu-latest
 
-        - name: Configure AWS creds
-          uses: aws-actions/configure-aws-credentials@v1
-          with:
-            aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-            aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-            aws-region: us-east-1
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
-        - name: login to ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v1
-        
-        - name: Build and push Image to ECR
-          id: build-image
-          env:
-            ECR_REGISTRY: ${{steps.login-ecr.outputs.registry}}
-            ECR_REPOSITORY: crewmeister-challenge
-            IMAGE_TAG: latest
-          run: |
-             docker build -t   $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-             docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    - name: Configure AWS Credentials using OIDC
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: arn:aws:iam::680343405290:role/github-actions-deploy # IAM role to assume
+        aws-region: us-east-1
 
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and Push Image to ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: crewmeister-challenge
+        IMAGE_TAG: latest
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
